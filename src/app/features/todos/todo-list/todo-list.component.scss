@@ -1,0 +1,310 @@
+@import '../../../../theme/theme';
+
+.todo-list-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.header-card {
+  margin-bottom: $spacing-lg;
+  padding: $spacing-xl;
+  background: $background-white;
+  border-radius: $border-radius-large;
+  @include card-shadow('subtle');
+
+  .header {
+    @include flex-between;
+
+    h1 {
+      margin: 0;
+      font-size: $font-size-4xl;
+      font-weight: $font-weight-bold;
+      color: $text-dark;
+    }
+
+    button {
+      @include button-primary;
+      display: flex;
+      align-items: center;
+      gap: $spacing-sm;
+      padding: 12px $spacing-lg;
+      height: auto;
+
+      mat-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+      }
+    }
+  }
+}
+
+.filters-card {
+  margin-bottom: $spacing-lg;
+  padding: $spacing-xl;
+  background: $background-white;
+  border-radius: $border-radius-large;
+  @include card-shadow('subtle');
+
+  h3 {
+    margin: 0 0 $spacing-lg;
+    font-size: $font-size-xl;
+    font-weight: $font-weight-semibold;
+    color: $text-dark;
+  }
+
+  .filters {
+    display: flex;
+    gap: $spacing-md;
+    align-items: center;
+    flex-wrap: wrap;
+
+    mat-form-field {
+      min-width: 200px;
+      flex: 1;
+
+      ::ng-deep {
+        .mat-mdc-text-field-wrapper {
+          background-color: $accent-cream !important;
+          border-radius: $border-radius-medium;
+          border: 1px solid $border-color-light;
+        }
+
+        .mdc-text-field--focused .mat-mdc-text-field-wrapper {
+          border-color: $primary-green;
+          border-width: 2px;
+        }
+      }
+    }
+
+    button {
+      height: 40px;
+      padding: 0 $spacing-lg;
+      border-radius: $border-radius-medium;
+      font-weight: $font-weight-medium;
+      color: $text-medium;
+      border: 1px solid $border-color-light;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: $spacing-xs;
+
+      &:hover:not(:disabled) {
+        background-color: $accent-cream;
+        border-color: $primary-green-light;
+      }
+
+      &:disabled {
+        opacity: 0.5;
+      }
+
+      mat-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+      }
+    }
+  }
+}
+
+.table-card {
+  background: $background-white;
+  border-radius: $border-radius-large;
+  @include card-shadow('subtle');
+  overflow: hidden;
+
+  .loading-container {
+    @include flex-center;
+    padding: $spacing-3xl;
+
+    mat-spinner {
+      ::ng-deep circle {
+        stroke: $primary-green;
+      }
+    }
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: $spacing-3xl $spacing-lg;
+    color: $text-medium;
+
+    mat-icon {
+      font-size: 80px;
+      width: 80px;
+      height: 80px;
+      margin-bottom: $spacing-lg;
+      color: $primary-green-light;
+      opacity: 0.5;
+    }
+
+    h3 {
+      font-size: $font-size-2xl;
+      font-weight: $font-weight-semibold;
+      margin: 0 0 $spacing-sm;
+      color: $text-dark;
+    }
+
+    p {
+      margin: 0;
+      font-size: $font-size-base;
+      color: $text-medium;
+    }
+  }
+
+  .table-container {
+    overflow-x: auto;
+
+    .todo-table {
+      width: 100%;
+
+      ::ng-deep {
+        .mat-mdc-header-row {
+          background-color: $accent-cream;
+        }
+
+        .mat-mdc-header-cell {
+          font-weight: $font-weight-semibold;
+          color: $text-dark;
+          font-size: $font-size-sm;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          padding: $spacing-md $spacing-lg;
+        }
+
+        .mat-mdc-cell {
+          padding: $spacing-lg;
+          color: $text-dark;
+          font-size: $font-size-base;
+          border-bottom: 1px solid $accent-cream;
+        }
+
+        .mat-mdc-row {
+          transition: background-color $transition-base;
+
+          &:hover {
+            background-color: $accent-cream;
+          }
+        }
+      }
+
+      .completed {
+        text-decoration: line-through;
+        color: $text-light;
+      }
+
+      mat-chip {
+        @include priority-chip('media');
+        font-weight: $font-weight-semibold;
+        border: none;
+
+        mat-icon {
+          font-size: 16px;
+          width: 16px;
+          height: 16px;
+        }
+
+        &.prioridad-alta {
+          @include priority-chip('alta');
+        }
+
+        &.prioridad-media {
+          @include priority-chip('media');
+        }
+
+        &.prioridad-baja {
+          @include priority-chip('baja');
+        }
+      }
+
+      mat-checkbox {
+        ::ng-deep {
+          .mdc-checkbox__background {
+            border-color: $primary-green;
+          }
+
+          .mdc-checkbox--selected .mdc-checkbox__background {
+            background-color: $primary-green;
+            border-color: $primary-green;
+          }
+        }
+      }
+
+      button[mat-icon-button] {
+        transition: all $transition-base;
+
+        &:hover {
+          background-color: rgba(0, 0, 0, 0.04);
+        }
+
+        &.mat-primary {
+          color: $primary-green;
+        }
+
+        &.mat-warn {
+          color: $error-color;
+        }
+      }
+    }
+
+    mat-paginator {
+      border-top: 1px solid $accent-cream;
+      background-color: $background-white;
+
+      ::ng-deep {
+        .mat-mdc-paginator-container {
+          padding: $spacing-md $spacing-lg;
+        }
+      }
+    }
+  }
+}
+
+// Responsive
+@include respond-to('md') {
+  .header-card {
+    padding: $spacing-lg;
+
+    .header {
+      flex-direction: column;
+      gap: $spacing-md;
+      align-items: stretch;
+
+      button {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  }
+
+  .filters-card {
+    padding: $spacing-lg;
+
+    .filters {
+      flex-direction: column;
+      align-items: stretch;
+
+      mat-form-field {
+        width: 100%;
+      }
+
+      button {
+        width: 100%;
+      }
+    }
+  }
+
+  .table-card {
+    .table-container {
+      .todo-table {
+        ::ng-deep {
+          .mat-mdc-header-cell,
+          .mat-mdc-cell {
+            padding: $spacing-sm $spacing-md;
+            font-size: $font-size-sm;
+          }
+        }
+      }
+    }
+  }
+}

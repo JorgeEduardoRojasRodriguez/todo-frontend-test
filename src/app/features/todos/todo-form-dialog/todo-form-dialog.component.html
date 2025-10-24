@@ -1,0 +1,60 @@
+<h2 mat-dialog-title>{{ isEditMode ? 'Editar Tarea' : 'Nueva Tarea' }}</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="todoForm">
+    <mat-form-field class="full-width" appearance="outline">
+      <mat-label>Nombre de la Tarea</mat-label>
+      <input
+        matInput
+        formControlName="nombre"
+        placeholder="Ej: Completar informe mensual"
+        autocomplete="off"
+      >
+      <mat-icon matPrefix>assignment</mat-icon>
+      <mat-error *ngIf="todoForm.get('nombre')?.invalid">
+        {{ getErrorMessage('nombre') }}
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field class="full-width" appearance="outline">
+      <mat-label>Prioridad</mat-label>
+      <mat-select formControlName="prioridad">
+        <mat-select-trigger>
+          <div class="priority-option">
+            <mat-icon *ngIf="todoForm.get('prioridad')?.value === 'alta'" class="icon-alta">arrow_upward</mat-icon>
+            <mat-icon *ngIf="todoForm.get('prioridad')?.value === 'media'" class="icon-media">drag_handle</mat-icon>
+            <mat-icon *ngIf="todoForm.get('prioridad')?.value === 'baja'" class="icon-baja">arrow_downward</mat-icon>
+            {{ todoForm.get('prioridad')?.value | titlecase }}
+          </div>
+        </mat-select-trigger>
+        <mat-option *ngFor="let p of prioridades" [value]="p">
+          <div class="priority-option">
+            <mat-icon *ngIf="p === 'alta'" class="icon-alta">arrow_upward</mat-icon>
+            <mat-icon *ngIf="p === 'media'" class="icon-media">drag_handle</mat-icon>
+            <mat-icon *ngIf="p === 'baja'" class="icon-baja">arrow_downward</mat-icon>
+            {{ p | titlecase }}
+          </div>
+        </mat-option>
+      </mat-select>
+      <mat-icon matPrefix>flag</mat-icon>
+    </mat-form-field>
+
+    <div *ngIf="isEditMode" class="checkbox-container">
+      <mat-checkbox formControlName="finalizada" color="primary">
+        Marcar como finalizada
+      </mat-checkbox>
+    </div>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Cancelar</button>
+  <button
+    mat-raised-button
+    color="primary"
+    (click)="onSubmit()"
+    [disabled]="todoForm.invalid"
+  >
+    {{ isEditMode ? 'Actualizar' : 'Crear' }}
+  </button>
+</mat-dialog-actions>

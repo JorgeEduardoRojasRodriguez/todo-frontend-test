@@ -1,0 +1,82 @@
+<app-auth-layout
+  title="Crear Cuenta"
+  subtitle="Únete y comienza a organizar tus tareas"
+  visualTitle="Comienza tu viaje hacia la productividad"
+  visualDescription="Únete a miles de usuarios que ya organizan su vida con nuestra plataforma. Es gratis y fácil de usar."
+  visualIcon="task_alt"
+>
+  <!-- Formulario -->
+  <form auth-form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+    <mat-form-field class="full-width" appearance="outline">
+      <mat-label>Nombre completo</mat-label>
+      <input
+        matInput
+        type="text"
+        formControlName="nombre"
+        placeholder="Juan Pérez"
+        autocomplete="name"
+      >
+      <mat-icon matPrefix>person_outline</mat-icon>
+      <mat-error *ngIf="registerForm.get('nombre')?.invalid">
+        {{ getErrorMessage('nombre') }}
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field class="full-width" appearance="outline">
+      <mat-label>Correo electrónico</mat-label>
+      <input
+        matInput
+        type="email"
+        formControlName="email"
+        placeholder="tu@correo.com"
+        autocomplete="email"
+      >
+      <mat-icon matPrefix>mail_outline</mat-icon>
+      <mat-error *ngIf="registerForm.get('email')?.invalid">
+        {{ getErrorMessage('email') }}
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field class="full-width" appearance="outline">
+      <mat-label>Contraseña</mat-label>
+      <input
+        matInput
+        [type]="hidePassword ? 'password' : 'text'"
+        formControlName="password"
+        placeholder="Mínimo 6 caracteres"
+        autocomplete="new-password"
+      >
+      <mat-icon matPrefix>lock_outline</mat-icon>
+      <button
+        mat-icon-button
+        matSuffix
+        type="button"
+        (click)="hidePassword = !hidePassword"
+        [attr.aria-label]="'Mostrar/Ocultar contraseña'"
+        [attr.aria-pressed]="hidePassword"
+      >
+        <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+      </button>
+      <mat-error *ngIf="registerForm.get('password')?.invalid">
+        {{ getErrorMessage('password') }}
+      </mat-error>
+    </mat-form-field>
+
+    <button
+      mat-raised-button
+      color="primary"
+      type="submit"
+      class="full-width submit-button"
+      [disabled]="registerForm.invalid || loading"
+    >
+      <span *ngIf="!loading">Crear Cuenta</span>
+      <mat-spinner *ngIf="loading" diameter="20"></mat-spinner>
+    </button>
+  </form>
+
+  <!-- Footer -->
+  <p auth-footer class="text-center">
+    ¿Ya tienes cuenta?
+    <a routerLink="/auth/login" class="link">Inicia sesión</a>
+  </p>
+</app-auth-layout>

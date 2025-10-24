@@ -1,0 +1,108 @@
+// Theme Variables - TodoApp
+// Centralización de todas las variables de diseño
+
+// Colores principales
+$primary-green: #6B9B7C;
+$primary-green-light: #8FBC8F;
+$primary-green-dark: #4A7C59;
+$primary-green-hover: #5A8B6C;
+
+// Colores de acento
+$accent-beige: #E8DCC4;
+$accent-cream: #F5F0E8;
+$accent-cream-dark: #E5DFD6;
+
+// Fondos
+$background-light: #FAFAF8;
+$background-white: #FFFFFF;
+$background-overlay: rgba(0, 0, 0, 0.5);
+
+// Colores de texto
+$text-dark: #2C3E3C;
+$text-medium: #5A6C6A;
+$text-light: #8A9B99;
+$text-muted: #A8B5B3;
+
+// Colores de estado
+$success-color: #6B9B7C;
+$error-color: #E57373;
+$warning-color: #FFB74D;
+$info-color: #64B5F6;
+
+// Prioridades (Chips de tareas)
+$priority-alta-bg: #FFE8E8;
+$priority-alta-text: #C62828;
+$priority-media-bg: #FFF3E0;
+$priority-media-text: #EF6C00;
+$priority-baja-bg: #E8F5E9;
+$priority-baja-text: #2E7D32;
+
+// Sombras
+$shadow-subtle: rgba(0, 0, 0, 0.08);
+$shadow-medium: rgba(0, 0, 0, 0.12);
+$shadow-elevated: rgba(0, 0, 0, 0.16);
+$shadow-button: rgba(107, 155, 124, 0.3);
+$shadow-button-hover: rgba(107, 155, 124, 0.4);
+
+// Bordes
+$border-radius-small: 8px;
+$border-radius-medium: 12px;
+$border-radius-large: 16px;
+$border-radius-full: 9999px;
+$border-color-light: rgba(107, 155, 124, 0.2);
+$border-color: rgba(0, 0, 0, 0.12);
+
+// Espaciado
+$spacing-xs: 4px;
+$spacing-sm: 8px;
+$spacing-md: 16px;
+$spacing-lg: 24px;
+$spacing-xl: 32px;
+$spacing-2xl: 48px;
+$spacing-3xl: 64px;
+
+// Tipografía
+$font-family-base: 'Inter', 'Segoe UI', Roboto, -apple-system, BlinkMacSystemFont, sans-serif;
+$font-size-xs: 12px;
+$font-size-sm: 13px;
+$font-size-base: 15px;
+$font-size-md: 16px;
+$font-size-lg: 18px;
+$font-size-xl: 20px;
+$font-size-2xl: 24px;
+$font-size-3xl: 28px;
+$font-size-4xl: 32px;
+$font-size-5xl: 48px;
+
+$font-weight-light: 300;
+$font-weight-normal: 400;
+$font-weight-medium: 500;
+$font-weight-semibold: 600;
+$font-weight-bold: 700;
+
+// Transiciones
+$transition-fast: 0.15s ease;
+$transition-base: 0.2s ease;
+$transition-slow: 0.3s ease;
+
+// Z-index
+$z-index-dropdown: 1000;
+$z-index-sticky: 1020;
+$z-index-fixed: 1030;
+$z-index-modal-backdrop: 1040;
+$z-index-modal: 1050;
+$z-index-popover: 1060;
+$z-index-tooltip: 1070;
+
+// Breakpoints
+$breakpoint-xs: 480px;
+$breakpoint-sm: 640px;
+$breakpoint-md: 768px;
+$breakpoint-lg: 1024px;
+$breakpoint-xl: 1280px;
+$breakpoint-2xl: 1536px;
+
+// Contenedor
+$container-max-width: 1400px;
+$container-padding: 32px;
+$container-padding-mobile: 16px;

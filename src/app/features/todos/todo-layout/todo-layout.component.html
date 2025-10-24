@@ -1,0 +1,26 @@
+<div class="todo-layout">
+  <mat-toolbar class="toolbar">
+    <mat-icon class="toolbar-icon">checklist_rtl</mat-icon>
+    <span class="toolbar-title">TodoApp</span>
+    <span class="spacer"></span>
+    <span class="user-name" *ngIf="currentUser()">{{ currentUser()?.nombre }}</span>
+    <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="Menú de usuario">
+      <mat-icon>account_circle</mat-icon>
+    </button>
+    <mat-menu #menu="matMenu">
+      <button mat-menu-item disabled>
+        <mat-icon>email</mat-icon>
+        <span>{{ currentUser()?.email }}</span>
+      </button>
+      <mat-divider></mat-divider>
+      <button mat-menu-item (click)="logout()">
+        <mat-icon>logout</mat-icon>
+        <span>Cerrar Sesión</span>
+      </button>
+    </mat-menu>
+  </mat-toolbar>
+
+  <div class="content">
+    <router-outlet></router-outlet>
+  </div>
+</div>

@@ -1,0 +1,89 @@
+$primary-green: #6B9B7C;
+$background-light: #FAFAF8;
+$text-dark: #2C3E3C;
+$text-medium: #5A6C6A;
+$white: #FFFFFF;
+
+.todo-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: $background-light;
+}
+
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: $white !important;
+  color: $text-dark !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06) !important;
+  padding: 8px 32px;
+  height: 70px;
+
+  .toolbar-icon {
+    margin-right: 12px;
+    color: $primary-green;
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+  }
+
+  .toolbar-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: $text-dark;
+    letter-spacing: -0.5px;
+  }
+
+  .user-name {
+    margin-right: 16px;
+    font-size: 15px;
+    font-weight: 500;
+    color: $text-medium;
+  }
+
+  ::ng-deep {
+    .mat-mdc-icon-button {
+      color: $text-dark;
+
+      &:hover {
+        background-color: rgba(107, 155, 124, 0.08);
+      }
+    }
+  }
+}
+
+.content {
+  flex: 1;
+  padding: 32px;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .toolbar {
+    padding: 8px 16px;
+    height: 64px;
+
+    .toolbar-icon {
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+      margin-right: 8px;
+    }
+
+    .toolbar-title {
+      font-size: 18px;
+    }
+
+    .user-name {
+      display: none;
+    }
+  }
+
+  .content {
+    padding: 20px 16px;
+  }
+}

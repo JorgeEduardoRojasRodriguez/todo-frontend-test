@@ -1,0 +1,39 @@
+<div class="auth-container">
+  <!-- Sección Izquierda - Formulario -->
+  <div class="auth-form-section">
+    <div class="logo">
+      <h2>Todo<span>App</span></h2>
+    </div>
+
+    <mat-card class="auth-card">
+      <mat-card-header>
+        <mat-card-title>{{ title }}</mat-card-title>
+        <mat-card-subtitle>{{ subtitle }}</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <!-- Contenido del formulario proyectado -->
+        <ng-content select="[auth-form]"></ng-content>
+      </mat-card-content>
+
+      <mat-card-actions>
+        <!-- Footer proyectado (enlaces) -->
+        <ng-content select="[auth-footer]"></ng-content>
+      </mat-card-actions>
+
+      <div class="support-section">
+        <p>¿Necesitas ayuda?</p>
+        <a href="mailto:support&#64;todoapp.com">support&#64;todoapp.com</a>
+      </div>
+    </mat-card>
+  </div>
+
+  <!-- Sección Derecha - Visual -->
+  <div class="auth-visual-section">
+    <div class="visual-content">
+      <mat-icon>{{ visualIcon }}</mat-icon>
+      <h1>{{ visualTitle }}</h1>
+      <p>{{ visualDescription }}</p>
+    </div>
+  </div>
+</div>

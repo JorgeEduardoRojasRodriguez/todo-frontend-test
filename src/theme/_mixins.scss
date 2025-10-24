@@ -1,0 +1,149 @@
+// Mixins reutilizables - TodoApp
+@import 'variables';
+
+// Mixin para sombras de tarjetas
+@mixin card-shadow($level: 'base') {
+  @if $level == 'subtle' {
+    box-shadow: 0 2px 8px $shadow-subtle;
+  } @else if $level == 'base' {
+    box-shadow: 0 2px 12px $shadow-subtle;
+  } @else if $level == 'elevated' {
+    box-shadow: 0 4px 20px $shadow-medium;
+  }
+}
+
+// Mixin para botones primarios
+@mixin button-primary {
+  background-color: $primary-green;
+  color: $background-white;
+  border-radius: $border-radius-medium;
+  font-weight: $font-weight-semibold;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 12px $shadow-button;
+  transition: all $transition-base;
+
+  &:hover:not(:disabled) {
+    background-color: $primary-green-dark;
+    box-shadow: 0 6px 20px $shadow-button-hover;
+    transform: translateY(-1px);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+// Mixin para campos de formulario
+@mixin form-field {
+  .mat-mdc-text-field-wrapper {
+    background-color: $background-white !important;
+    border-radius: $border-radius-medium;
+    border: 1px solid $border-color-light;
+    padding: 4px 0;
+  }
+
+  .mat-mdc-form-field-focus-overlay {
+    display: none;
+  }
+
+  .mdc-text-field--focused .mat-mdc-text-field-wrapper {
+    border-color: $primary-green;
+    border-width: 2px;
+  }
+
+  .mat-mdc-form-field-icon-prefix {
+    color: $text-medium;
+    margin-right: 12px;
+  }
+}
+
+// Mixin para contenedores flexibles centrados
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// Mixin para contenedores flexibles con espacio entre elementos
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+// Mixin para transiciones suaves
+@mixin smooth-transition($properties...) {
+  transition-property: #{$properties};
+  transition-duration: $transition-base;
+  transition-timing-function: ease;
+}
+
+// Mixin para truncar texto
+@mixin text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Mixin para scrollbar personalizado
+@mixin custom-scrollbar {
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: $accent-cream;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: $primary-green-light;
+    border-radius: 4px;
+
+    &:hover {
+      background: $primary-green;
+    }
+  }
+}
+
+// Mixin para responsive
+@mixin respond-to($breakpoint) {
+  @if $breakpoint == 'xs' {
+    @media (max-width: $breakpoint-xs) { @content; }
+  }
+  @else if $breakpoint == 'sm' {
+    @media (max-width: $breakpoint-sm) { @content; }
+  }
+  @else if $breakpoint == 'md' {
+    @media (max-width: $breakpoint-md) { @content; }
+  }
+  @else if $breakpoint == 'lg' {
+    @media (max-width: $breakpoint-lg) { @content; }
+  }
+  @else if $breakpoint == 'xl' {
+    @media (max-width: $breakpoint-xl) { @content; }
+  }
+}
+
+// Mixin para chips de prioridad
+@mixin priority-chip($priority) {
+  @if $priority == 'alta' {
+    background-color: $priority-alta-bg;
+    color: $priority-alta-text;
+  } @else if $priority == 'media' {
+    background-color: $priority-media-bg;
+    color: $priority-media-text;
+  } @else if $priority == 'baja' {
+    background-color: $priority-baja-bg;
+    color: $priority-baja-text;
+  }
+
+  border-radius: $border-radius-full;
+  padding: 4px 12px;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}

@@ -1,0 +1,30 @@
+@import '../../../../theme/theme';
+
+// Estilos específicos del formulario de login
+form {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-lg;
+
+  mat-form-field {
+    margin-bottom: 0;
+
+    ::ng-deep {
+      @include form-field;
+    }
+  }
+
+  .submit-button {
+    height: 52px;
+    font-size: $font-size-md;
+    margin-top: $spacing-md;
+    @include button-primary;
+
+    mat-spinner {
+      display: inline-block;
+      ::ng-deep circle {
+        stroke: $background-white;
+      }
+    }
+  }
+}

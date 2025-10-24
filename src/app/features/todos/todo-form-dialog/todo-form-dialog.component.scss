@@ -1,0 +1,39 @@
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-top: 8px;
+}
+
+.checkbox-container {
+  margin-top: 8px;
+}
+
+.priority-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+
+    &.icon-alta {
+      color: #c62828;
+    }
+
+    &.icon-media {
+      color: #ef6c00;
+    }
+
+    &.icon-baja {
+      color: #2e7d32;
+    }
+  }
+}
+
+mat-dialog-actions {
+  padding: 16px 24px;
+  margin: 0;
+}

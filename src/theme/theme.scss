@@ -1,0 +1,9 @@
+// Theme principal - TodoApp
+// Importar este archivo en los componentes que necesiten usar el theme
+
+@import 'variables';
+@import 'mixins';
+
+// Este archivo exporta todas las variables y mixins del theme
+// Uso en componentes:
+// @import '../../theme/theme';
