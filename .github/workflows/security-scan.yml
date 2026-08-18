@@ -1,0 +1,20 @@
+name: Security scan (código ofuscado + dependencias)
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch: {}
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Escaneo anti-código-ofuscado
+        run: node scripts/check-obfuscation.mjs
+
+
+      - name: Escaneo de datos sensibles (.env, llaves, tokens)
+        run: node scripts/check-secrets.mjs
