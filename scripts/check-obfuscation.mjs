@@ -103,6 +103,14 @@ function estaPermitido(rule, file) {
     && (ruta === e.path || ruta.endsWith('/' + e.path)));
 }
 
+// Reconoce la salida de webpack por las marcas que webpack mismo escribe.
+// Se mira solo el arranque del archivo: ahi van los banners.
+function esSalidaDeBuild(c) {
+  const cabeza = c.slice(0, 2000);
+  return /^\s*\/\*!\s*For license information please see /.test(cabeza)
+    || /webpackBootstrap/.test(cabeza);
+}
+
 // Quita solo las lineas que SON comentario. A proposito no corta desde "//" a
 // mitad de linea: una URL dentro de un string llevaria a borrar el codigo que
 // va despues, y eso seria justo el hueco por donde esconder el payload.
@@ -124,6 +132,8 @@ const RULES = [
   },
   {
     name: 'dynamic-eval',
+    // Todo bundle grande la dispara: ahi no distingue nada.
+    ruidosaEnBundles: true,
     desc: 'Ejecución dinámica de código',
     test: (c) => {
       const hits = [];
@@ -139,6 +149,8 @@ const RULES = [
   },
   {
     name: 'base64-decode-exec',
+    // Todo bundle grande la dispara: ahi no distingue nada.
+    ruidosaEnBundles: true,
     desc: 'Decodifica base64 y probablemente lo ejecuta',
     test: (c) => {
       const hasB64 = /atob\s*\(|Buffer\.from\s*\([^)]*['"`]base64['"`]/.test(c);
@@ -165,6 +177,8 @@ const RULES = [
   },
   {
     name: 'hex-escape-heavy',
+    // Todo bundle grande la dispara: ahi no distingue nada.
+    ruidosaEnBundles: true,
     desc: 'Cadenas con escape hexadecimal masivo (\\xNN)',
     test: (c) => {
       const m = c.match(/\\x[0-9a-fA-F]{2}/g);
@@ -257,7 +271,9 @@ for (const f of tracked()) {
     if (statSync(f).size > 5 * 1024 * 1024) continue; // >5MB, saltar
     content = readFileSync(f, 'utf8');
   } catch { continue; }
+  const esBundle = esSalidaDeBuild(content);
   for (const rule of RULES) {
+    if (rule.ruidosaEnBundles && esBundle) continue;
     // suspicious-install-script solo aplica a package.json; el resto no debería
     // marcar package.json por datos legítimos, pero lo dejamos correr.
     const hit = rule.test(content, f);
