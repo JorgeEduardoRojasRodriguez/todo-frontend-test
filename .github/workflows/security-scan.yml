@@ -1,20 +1,40 @@
 name: Security scan (código ofuscado + dependencias)
+
+# El push estaba limitado a [testing, branch.dev], asi que los push a main no se
+# escaneaban. Sin filtro, cubre todas las ramas.
 on:
   push:
-    branches: [main, master]
   pull_request:
   workflow_dispatch: {}
+
 jobs:
   scan:
     runs-on: ubuntu-latest
+    env:
+      # Si el secreto no existe llega vacio, y el paso de Snyk se salta solo.
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+
       - name: Escaneo anti-código-ofuscado
         run: node scripts/check-obfuscation.mjs
 
-
       - name: Escaneo de datos sensibles (.env, llaves, tokens)
         run: node scripts/check-secrets.mjs
+
+      # Las dependencias son la otra puerta de entrada: este malware se propaga
+      # por paquetes de npm comprometidos. check-deps.mjs corta el build solo con
+      # paquetes maliciosos y con dependencias que no vienen del registro oficial;
+      # los CVEs corrientes los reporta sin tumbar el build, para que el rojo siga
+      # significando "hay un ataque" y no "hay deuda tecnica".
+      - name: Revisión de dependencias (paquetes maliciosos)
+        run: node scripts/check-deps.mjs
+
+      - name: Snyk (solo si SNYK_TOKEN está configurado)
+        if: env.SNYK_TOKEN != '' && hashFiles('package.json') != ''
+        run: |
+          npm install -g snyk
+          snyk test --severity-threshold=high
