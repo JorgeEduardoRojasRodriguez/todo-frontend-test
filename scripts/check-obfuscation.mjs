@@ -26,6 +26,19 @@ const IGNORE = [
   /(^|\/)coverage\//,
   /\.min\.(js|css)$/,
   /(^|\/)(package-lock\.json|yarn\.lock|pnpm-lock\.yaml)$/,
+  // Artefactos generados y librerias vendorizadas que se commitean. Traen
+  // base64, eval y \xNN por su propia naturaleza, y marcarlos solo ensena a
+  // ignorar la guarda: eran 73 de las 73 detecciones en los repos propios.
+  /(^|\/)\.yarn\//,
+  /(^|\/)\.pnp\.[cm]?js$/,
+  /(^|\/)\.expo\//,
+  /(^|\/)vendor\//,
+  /(^|\/)www\//,
+  /(^|\/)platforms\//,
+  // Bundles con hash de contenido: main-es5.133c15df28a3ee837fed.js, los
+  // .chunk.js de create-react-app. El hash en el nombre solo lo pone un build.
+  /\.[0-9a-f]{8,}\.[cm]?js$/,
+  /\.chunk\.js$/,
 ];
 // Archivos de configuración que deben ser pequeños (blanco típico del malware).
 const CONFIG_RE = /(^|\/)(postcss|next|tailwind|vite|webpack|rollup|svelte|nuxt|astro|babel|eslint|prettier)\.config\.[cm]?[jt]s$/i;
@@ -137,8 +150,13 @@ const RULES = [
     name: 'shell-exec',
     desc: 'Ejecución de comandos del sistema',
     test: (c, f) => {
-      // Permitido en scripts de build/deploy propios; sospechoso en config/app.
-      if (/(^|\/)(scripts?|tests?|__tests__|tools?|e2e)\//.test(f.replace(/\\/g, '/'))) return null;
+      // Solo en configuraciones. En codigo de servidor lanzar procesos es
+      // normal —node-media-server llama a ffmpeg, un pipeline corre tippecanoe,
+      // un runner arranca playwright— y ahi la regla no distingue uso legitimo
+      // de backdoor: los 9 archivos que marco eran legitimos. El payload en
+      // cambio metia spawn("node", ["-e", ...]) dentro de un config, y ahi no
+      // tiene ninguna explicacion.
+      if (!CONFIG_RE.test(f.replace(/\\/g, '/'))) return null;
       if (/require\(\s*['"`]child_process['"`]\s*\)|from\s+['"`]node:child_process['"`]|\bexecSync\s*\(|\bspawn(Sync)?\s*\(/.test(c)) {
         return 'uso de child_process/exec';
       }
@@ -192,7 +210,16 @@ const RULES = [
       const isTailwind = /(^|\/)tailwind\.config\.[cm]?[jt]s$/i.test(p);
       const max = isTailwind ? TAILWIND_MAX_BYTES : CONFIG_MAX_BYTES;
       const bytes = Buffer.byteLength(c, 'utf8');
-      return bytes > max ? `${bytes} bytes (máx esperado ${max})` : null;
+      if (bytes <= max) return null;
+      // El tamano por si solo no sirve: hay configs legitimos grandes, como un
+      // vite.config.js de 5568 bytes en 230 lineas o un next.config.mjs de 7297
+      // en 170. Lo que delata al payload es que el peso viene de POCAS lineas,
+      // porque el inyector lo pega todo en una. Medido: el payload real trae
+      // 1100 bytes por linea y esos dos configs 24 y 43.
+      const lineas = c.split('\n').length;
+      const porLinea = bytes / lineas;
+      if (porLinea < 300) return null;
+      return `${bytes} bytes en ${lineas} lineas (${Math.round(porLinea)} por linea)`;
     },
   },
   {
@@ -203,8 +230,14 @@ const RULES = [
       try {
         const j = JSON.parse(c);
         const s = j.scripts || {};
-        const bad = ['preinstall', 'install', 'postinstall'].filter((k) => s[k]);
-        return bad.length ? `scripts: ${bad.join(', ')} — revisar manualmente` : null;
+        // Que exista un postinstall es normal: husky, "quasar prepare",
+        // patch-package. Lo que importa es que BAJE o EJECUTE algo arbitrario.
+        const RIESGO = /curl|wget|\bnode\s+-e\b|\beval\b|base64|atob|powershell|Invoke-WebRequest|\bsh\s+-c\b|https?:\/\//i;
+        const bad = ['preinstall', 'install', 'postinstall']
+          .filter((k) => s[k] && RIESGO.test(s[k]));
+        return bad.length
+          ? bad.map((k) => `${k}: ${s[k]}`).join(' | ')
+          : null;
       } catch { return null; }
     },
   },
