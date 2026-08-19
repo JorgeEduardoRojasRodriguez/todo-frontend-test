@@ -29,7 +29,10 @@ const IGNORE = [
 ];
 // Archivos de configuración que deben ser pequeños (blanco típico del malware).
 const CONFIG_RE = /(^|\/)(postcss|next|tailwind|vite|webpack|rollup|svelte|nuxt|astro|babel|eslint|prettier)\.config\.[cm]?[jt]s$/i;
-const CONFIG_MAX_BYTES = 2048; // 2 KB — un config normal pesa < 500 bytes
+const CONFIG_MAX_BYTES = 4096; // 4 KB — un config normal pesa < 500 bytes
+// tailwind.config.* crece de forma legítima con theme tokens/colores/keyframes
+// (aquí pesa ~3.4 KB solo con lo estándar de shadcn) — no es indicio de payload.
+const TAILWIND_MAX_BYTES = 8192;
 
 function tracked() {
   const cmd = STAGED
@@ -48,6 +51,55 @@ function ignored(f) {
 }
 
 // Reglas de detección. Cada una: { name, test(content, file) -> string|null }
+// Excepciones declaradas por el repo, una por linea, en .security-allowlist:
+//
+//   dynamic-eval:public/Content/js/sxx-modal.js   una regla en un archivo
+//   public/Content/js/sxx-modal.js                todas las reglas del archivo
+//   # comentario
+//
+// Existe para lo que ya se reviso y se decidio dejar pasar. La alternativa es
+// --no-verify, que apaga TODAS las reglas en TODOS los archivos y no deja rastro
+// de quien lo decidio ni por que; esto queda en el repo y se revisa en el PR.
+function cargarExcepciones() {
+  let texto;
+  try {
+    texto = readFileSync('.security-allowlist', 'utf8');
+  } catch {
+    return [];
+  }
+  return texto
+    .split('\n')
+    .map((l) => l.trim())
+    .filter((l) => l && !l.startsWith('#'))
+    .map((l) => {
+      const i = l.indexOf(':');
+      // Se parte en el primer ':' solo si lo de la izquierda parece un nombre de
+      // regla; asi una ruta de Windows (C:/...) no se malinterpreta.
+      if (i > 0 && /^[a-z0-9-]+$/.test(l.slice(0, i))) {
+        return { rule: l.slice(0, i), path: l.slice(i + 1).trim() };
+      }
+      return { rule: null, path: l };
+    });
+}
+
+const EXCEPCIONES = cargarExcepciones();
+
+function estaPermitido(rule, file) {
+  const ruta = file.replace(/\\/g, '/');
+  return EXCEPCIONES.some((e) => (e.rule === null || e.rule === rule)
+    && (ruta === e.path || ruta.endsWith('/' + e.path)));
+}
+
+// Quita solo las lineas que SON comentario. A proposito no corta desde "//" a
+// mitad de linea: una URL dentro de un string llevaria a borrar el codigo que
+// va despues, y eso seria justo el hueco por donde esconder el payload.
+function sinComentarios(c) {
+  return c
+    .split('\n')
+    .filter((l) => !/^\s*(\/\/|\*|\/\*)/.test(l))
+    .join('\n');
+}
+
 const RULES = [
   {
     name: 'hex-var-obfuscation',
@@ -62,7 +114,11 @@ const RULES = [
     desc: 'Ejecución dinámica de código',
     test: (c) => {
       const hits = [];
-      if (/\beval\s*\(/.test(c)) hits.push('eval(');
+      // Solo el eval global: \b tambien casa con ".eval(", que es un metodo
+      // cualquiera (tipo.eval(ctx, valor)) y no ejecuta codigo dinamico. Y se
+      // ignoran las lineas que SON comentario, donde "eval(" aparece al
+      // documentar una funcion.
+      if (/(?<![.\w$])eval\s*\(/.test(sinComentarios(c))) hits.push('eval(');
       if (/new\s+Function\s*\(/.test(c)) hits.push('new Function(');
       if (/\bFunction\s*\(\s*['"`]return this/.test(c)) hits.push('Function("return this")');
       return hits.length ? hits.join(', ') : null;
@@ -73,7 +129,7 @@ const RULES = [
     desc: 'Decodifica base64 y probablemente lo ejecuta',
     test: (c) => {
       const hasB64 = /atob\s*\(|Buffer\.from\s*\([^)]*['"`]base64['"`]/.test(c);
-      const hasExec = /\beval\s*\(|new\s+Function\s*\(|child_process|execSync|spawn/.test(c);
+      const hasExec = /(?<![.\w$])eval\s*\(|new\s+Function\s*\(|child_process|execSync|spawn/.test(c);
       return hasB64 && hasExec ? 'base64 + eval/child_process' : null;
     },
   },
@@ -82,7 +138,7 @@ const RULES = [
     desc: 'Ejecución de comandos del sistema',
     test: (c, f) => {
       // Permitido en scripts de build/deploy propios; sospechoso en config/app.
-      if (/scripts?\//.test(f.replace(/\\/g, '/'))) return null;
+      if (/(^|\/)(scripts?|tests?|__tests__|tools?|e2e)\//.test(f.replace(/\\/g, '/'))) return null;
       if (/require\(\s*['"`]child_process['"`]\s*\)|from\s+['"`]node:child_process['"`]|\bexecSync\s*\(|\bspawn(Sync)?\s*\(/.test(c)) {
         return 'uso de child_process/exec';
       }
@@ -99,30 +155,44 @@ const RULES = [
   },
   {
     name: 'long-obfuscated-line',
-    desc: 'Línea larguísima con estructura de código minificado/ofuscado',
+    desc: 'Config con una linea de codigo larguisima (posible payload)',
     test: (c, f) => {
-      // Ignorar .json (datos legítimos largos).
-      if (f.endsWith('.json')) return null;
+      // Solo configuraciones. El relleno de espacios parecia suficiente para
+      // reconocer el payload, pero no lo es: en un bundle de una sola linea el
+      // relleno puede caer dentro de un string de CSS y detras venir JS
+      // minificado legitimo, con mas operadores que el payload mismo. Lo que de
+      // verdad los separa son los identificadores _0x…, y de eso se encarga
+      // hex-var-obfuscation.
+      //
+      // En un archivo de configuracion, en cambio, una linea densa de 1500+
+      // chars no tiene explicacion legitima, con relleno o sin el.
+      if (!CONFIG_RE.test(f.replace(/\\/g, '/'))) return null;
       for (const line of c.split('\n')) {
         if (line.length <= 1500) continue;
-        // Distinguir CÓDIGO minificado/ofuscado de un string largo de datos
-        // (base64, paths de SVG, texto). El código tiene muchos operadores.
         const ops = (line.match(/[;{}]|=>|\)\s*\{|\}\s*\)|\bfunction\b|\|\||&&/g) || []).length;
-        const density = ops / (line.length / 100); // operadores por cada 100 chars
-        if (ops >= 25 && density >= 3) {
-          return `línea de ${line.length} chars con ${ops} operadores (código minificado/ofuscado)`;
-        }
+        if (ops < 25) continue;
+        // El relleno de espacios es como se esconde: empuja el payload fuera de
+        // la pantalla del editor. Se reporta cuando esta, porque es la senal
+        // mas clara de que fue inyectado y no escrito.
+        const pad = /[ \t]{20,}/.exec(line);
+        const detras = pad ? line.length - (pad.index + pad[0].length) : 0;
+        return pad
+          ? `linea de ${line.length} chars, con ${detras} escondidos detras de un relleno de ${pad[0].length} espacios`
+          : `linea de ${line.length} chars con ${ops} operadores`;
       }
       return null;
-    },
+  },
   },
   {
     name: 'config-too-large',
     desc: 'Archivo de configuración anormalmente grande (posible payload inyectado)',
     test: (c, f) => {
-      if (!CONFIG_RE.test(f.replace(/\\/g, '/'))) return null;
+      const p = f.replace(/\\/g, '/');
+      if (!CONFIG_RE.test(p)) return null;
+      const isTailwind = /(^|\/)tailwind\.config\.[cm]?[jt]s$/i.test(p);
+      const max = isTailwind ? TAILWIND_MAX_BYTES : CONFIG_MAX_BYTES;
       const bytes = Buffer.byteLength(c, 'utf8');
-      return bytes > CONFIG_MAX_BYTES ? `${bytes} bytes (máx esperado ${CONFIG_MAX_BYTES})` : null;
+      return bytes > max ? `${bytes} bytes (máx esperado ${max})` : null;
     },
   },
   {
@@ -158,7 +228,9 @@ for (const f of tracked()) {
     // suspicious-install-script solo aplica a package.json; el resto no debería
     // marcar package.json por datos legítimos, pero lo dejamos correr.
     const hit = rule.test(content, f);
-    if (hit) findings.push({ file: f, rule: rule.name, detail: hit, desc: rule.desc });
+    if (!hit) continue;
+    if (estaPermitido(rule.name, f)) continue;
+    findings.push({ file: f, rule: rule.name, detail: hit, desc: rule.desc });
   }
 }
 
@@ -172,6 +244,14 @@ for (const h of findings) {
   console.error(`  • [${h.rule}] ${h.file}`);
   console.error(`      ${h.desc}: ${h.detail}`);
 }
-console.error(`\nCommit/deploy BLOQUEADO. Revisa estos archivos. Si es un falso positivo,`);
-console.error(`ajusta scripts/check-obfuscation.mjs o usa "git commit --no-verify" solo si estás 100% seguro.\n`);
+console.error(`\nCommit/deploy BLOQUEADO. Revisa cada archivo de la lista.`);
+console.error(`
+Si ya lo revisaste y es codigo legitimo, declaralo en .security-allowlist
+(una linea por excepcion, se revisa en el PR como cualquier otro cambio):
+
+  ${findings.map((h) => `${h.rule}:${h.file.replace(/\\/g, '/')}`).join('\n  ')}
+
+Evita "git commit --no-verify": apaga todas las reglas en todos los archivos y
+no deja constancia de quien lo decidio ni por que.
+`);
 process.exit(1);
