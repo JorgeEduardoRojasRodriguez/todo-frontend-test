@@ -43,4 +43,6 @@ Thumbs.db
 
 # Environment
 config.bat
+.env
+.env.*
 !.env.example
